@@ -17,14 +17,16 @@ import mercantile
 import mapnik
 import re
 import urllib.request
+from shapely.geometry import shape
+from shapely.wkb import dumps as wkb_dumps
+import argparse
+import time
 
 # Add our parent folder to our path
 package_path = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
 sys.path.insert(0, package_path)
-from TileStache.Goodies.VecTiles.client import Datasource as TileStacheVectorDatasource
 
-import argparse
-import time
+
 
 parser = argparse.ArgumentParser(description='Build a raster tile from a vector tile.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output.')
@@ -53,43 +55,61 @@ r = mapnik.Rule() # rule object to hold symbolizers
 # to add outlines to a polygon we create a LineSymbolizer
 line_symbolizer = mapnik.LineSymbolizer()
 line_symbolizer.stroke = mapnik.Color('red')
-line_symbolizer.stroke_width = 0.2
+line_symbolizer.stroke_width = 1.0
 r.symbols.append(line_symbolizer) # add the symbolizer to the rule object
 s.rules.append(r) # now add the rule to the style and we're done
 
 m.append_style('Curvature Lines',s) # Styles are given names only as they are applied to the map
 
-# ds = TileStacheVectorDatasource(args.i)
-ds = mapnik.Shapefile(file='../data/ne_110m_admin_0_countries.shp')
-print (ds)
 
-#
-# class CurvatureVectorTileDatasource(mapnik.PythonDatasource):
-#     base_path = '.'
-#     x = 0
-#     y = 0
-#     z = 0
-#
-#     def __init__(self, base, x, y, z):
-#         self.base = base_path
-#         self.x = x
-#         self.y = y
-#         self.z = z
-#
-#     def get_data():
-#         file = '{}/{}/{}/{}.mvt'.format(self.base_path, self.z, self.x, self.y)
-#         if re.search('^https?://', file):
-#             with urllib.request.urlopen(file) as f:
-#                 return f.read()
-#         else:
-#             with open(file, 'rb') as f:
-#                 return f.read()
-#
-#
-#
-#
-# decoded_data = mapbox_vector_tile.decode(data)
+class CurvatureVectorTile(object):
+    base_path = '.'
+    x = 0
+    y = 0
+    z = 0
+    extent = 0
 
+    def __init__(self, source_template, z, x, y):
+        self.source_template = source_template
+        self.x = x
+        self.y = y
+        self.z = z
+        self.extent = 0
+
+    def get_data(self):
+        file = self.source_template.format(z=self.z, x=self.x, y=self.y)
+        if re.search('^https?://', file):
+            with urllib.request.urlopen(file) as f:
+                return f.read()
+        else:
+            with open(file, 'rb') as f:
+                return f.read()
+
+    def add_features_to_datasource(self, ds):
+        i = 0
+        context = mapnik.Context()
+        context.push('curvature')
+        context.push('paved')
+        tile = mapbox_vector_tile.decode(self.get_data())
+        layer = tile['gte1000']
+        self.extent = layer['extent']
+        # print(layer['extent'])
+        for v_feature in layer['features']:
+            feature = mapnik.Feature(context, i)
+            feature['curvature'] = v_feature['properties']['curvature']
+            feature['paved'] = v_feature['properties']['paved']
+            # print (v_feature['geometry'])
+            feature_geom = shape(v_feature['geometry'])
+            feature.geometry = mapnik.Geometry.from_wkb(wkb_dumps(feature_geom))
+            ds.add_feature(feature)
+            # print(feature.to_geojson())
+            i = i + 1
+
+
+
+vector_tile = CurvatureVectorTile(args.i, args.z, args.x, args.y)
+ds = mapnik.MemoryDatasource()
+vector_tile.add_features_to_datasource(ds)
 layer = mapnik.Layer('curvature')
 layer.srs = merc.params()
 layer.datasource = ds
@@ -97,8 +117,9 @@ layer.styles.append('Curvature Lines')
 m.layers.append(layer)
 
 # Set the output bounding-box to the tile bounds.
-merc_bbox = mercantile.bounds(args.x, args.y, args.z)
-bbox = mapnik.Box2d(merc_bbox.west, merc_bbox.south, merc_bbox.east, merc_bbox.north)
+# merc_bbox = mercantile.bounds(args.x, args.y, args.z)
+# bbox = mapnik.Box2d(merc_bbox.west, merc_bbox.south, merc_bbox.east, merc_bbox.north)
+bbox = mapnik.Box2d(0, 0, vector_tile.extent, vector_tile.extent)
 m.zoom_to_box(bbox)
 
 mapnik.render_to_file(m, args.o.format(z=args.z, x=args.x, y=args.y), args.f)
