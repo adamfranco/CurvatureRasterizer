@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+# build_region
+#
+# Script to [re]build tiles in a region.
+#
+# Author: Adam Franco
+# https://github.com/adamfranco/CurvatureBuilder
+# Copyright 2020 Adam Franco
+# License: GNU General Public License Version 3 or later
+
+import os
+import sys
+import mapbox_vector_tile
+import mercantile
+import mapnik
+import re
+import urllib.request
+
+# Add our parent folder to our path
+package_path = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
+sys.path.insert(0, package_path)
+from TileStache.Goodies.VecTiles.client import Datasource as TileStacheVectorDatasource
+
+
+import argparse
+import time
+
+parser = argparse.ArgumentParser(description='Build a raster tile from a vector tile.')
+parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output.')
+parser.add_argument('-t', type=str, required=True, help='Template path/url for vector tiles. Examples: "http://example.com/{z}/{x}/{y}.mvt", "/var/cache/tiles/{z}/{x}/{y}.mvt"')
+parser.add_argument('-z', type=int, required=True, help='Which zoom to build tiles for.')
+parser.add_argument('-x', type=int, required=True, help='x-coordinate of the tile.')
+parser.add_argument('-y', type=int, required=True, help='y-coordinate of the tile.')
+parser.add_argument('-u', action='store_true', help='Update tiles in the region. Default behavior is to generate if they do not exist.')
+args = parser.parse_args()
+
+# Set up projections
+# spherical mercator (most common target map projection of osm data imported with osm2pgsql)
+merc = mapnik.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
+
+
+m = mapnik.Map(256,256)
+m.srs = merc.params()
+m.background = mapnik.Color('#00000000')
+
+
+s = mapnik.Style() # style object to hold rules
+r = mapnik.Rule() # rule object to hold symbolizers
+
+# to add outlines to a polygon we create a LineSymbolizer
+line_symbolizer = mapnik.LineSymbolizer()
+line_symbolizer.stroke = mapnik.Color('rgb(50%,50%,50%)')
+line_symbolizer.stroke_width = 0.1
+r.symbols.append(line_symbolizer) # add the symbolizer to the rule object
+s.rules.append(r) # now add the rule to the style and we're done
+
+m.append_style('Curvature Lines',s) # Styles are given names only as they are applied to the map
+
+merc_bbox = mercantile.bounds(args.x, args.y, args.z)
+
+ds = TileStacheVectorDatasource(args.t)
+print (ds)
+
+#
+# class CurvatureVectorTileDatasource(mapnik.PythonDatasource):
+#     base_path = '.'
+#     x = 0
+#     y = 0
+#     z = 0
+#
+#     def __init__(self, base, x, y, z):
+#         self.base = base_path
+#         self.x = x
+#         self.y = y
+#         self.z = z
+#
+#     def get_data():
+#         file = '{}/{}/{}/{}.mvt'.format(self.base_path, self.z, self.x, self.y)
+#         if re.search('^https?://', file):
+#             with urllib.request.urlopen(file) as f:
+#                 return f.read()
+#         else:
+#             with open(file, 'rb') as f:
+#                 return f.read()
+#
+#
+#
+#
+# decoded_data = mapbox_vector_tile.decode(data)
+
+layer = mapnik.Layer('curvature')
+layer.srs = merc.params()
+layer.datasource = ds
+layer.styles.append('Curvature Lines')
+m.layers.append(layer)
+
+m.zoom_to_box(merc_bbox)
+mapnik.render_to_file(m,'{z}-{x}-{y}.png', 'png')

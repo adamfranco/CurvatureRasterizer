@@ -1,0 +1,3 @@
+[submodule "TileStacheRelease"]
+	path = TileStacheRelease
+	url = https://github.com/TileStache/TileStache.git
