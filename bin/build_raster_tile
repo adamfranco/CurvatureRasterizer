@@ -23,13 +23,14 @@ package_path = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
 sys.path.insert(0, package_path)
 from TileStache.Goodies.VecTiles.client import Datasource as TileStacheVectorDatasource
 
-
 import argparse
 import time
 
 parser = argparse.ArgumentParser(description='Build a raster tile from a vector tile.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output.')
-parser.add_argument('-t', type=str, required=True, help='Template path/url for vector tiles. Examples: "http://example.com/{z}/{x}/{y}.mvt", "/var/cache/tiles/{z}/{x}/{y}.mvt"')
+parser.add_argument('-i', type=str, required=True, help='Input template path/url for vector tiles. Examples: "http://example.com/{z}/{x}/{y}.mvt", "/var/cache/tiles/vector/{z}/{x}/{y}.mvt"')
+parser.add_argument('-o', type=str, required=True, help='Output template path for raster tiles. Examples: "{z}-{x}-{y}.png", "/var/cache/tiles/raster/{z}/{x}/{y}.png"')
+parser.add_argument('-f', type=str, default='png', help='Output template path for raster tiles. Examples: "{z}-{x}-{y}.png", "/var/cache/tiles/raster/{z}/{x}/{y}.png"')
 parser.add_argument('-z', type=int, required=True, help='Which zoom to build tiles for.')
 parser.add_argument('-x', type=int, required=True, help='x-coordinate of the tile.')
 parser.add_argument('-y', type=int, required=True, help='y-coordinate of the tile.')
@@ -51,16 +52,15 @@ r = mapnik.Rule() # rule object to hold symbolizers
 
 # to add outlines to a polygon we create a LineSymbolizer
 line_symbolizer = mapnik.LineSymbolizer()
-line_symbolizer.stroke = mapnik.Color('rgb(50%,50%,50%)')
-line_symbolizer.stroke_width = 0.1
+line_symbolizer.stroke = mapnik.Color('red')
+line_symbolizer.stroke_width = 0.2
 r.symbols.append(line_symbolizer) # add the symbolizer to the rule object
 s.rules.append(r) # now add the rule to the style and we're done
 
 m.append_style('Curvature Lines',s) # Styles are given names only as they are applied to the map
 
-merc_bbox = mercantile.bounds(args.x, args.y, args.z)
-
-ds = TileStacheVectorDatasource(args.t)
+# ds = TileStacheVectorDatasource(args.i)
+ds = mapnik.Shapefile(file='../data/ne_110m_admin_0_countries.shp')
 print (ds)
 
 #
@@ -96,5 +96,9 @@ layer.datasource = ds
 layer.styles.append('Curvature Lines')
 m.layers.append(layer)
 
-m.zoom_to_box(merc_bbox)
-mapnik.render_to_file(m,'{z}-{x}-{y}.png', 'png')
+# Set the output bounding-box to the tile bounds.
+merc_bbox = mercantile.bounds(args.x, args.y, args.z)
+bbox = mapnik.Box2d(merc_bbox.west, merc_bbox.south, merc_bbox.east, merc_bbox.north)
+m.zoom_to_box(bbox)
+
+mapnik.render_to_file(m, args.o.format(z=args.z, x=args.x, y=args.y), args.f)
