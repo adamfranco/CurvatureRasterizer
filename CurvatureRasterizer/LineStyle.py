@@ -22,12 +22,6 @@ class CurvatureLinesStyle(object):
         color = "#{}".format(self.c1000_rainbow.colourAt(percent));
         width_multiplier = self.get_width_multiplier(self.zoom)
 
-        print("")
-        print(percent)
-        print(self.filter_condition(False, percent))
-        print(self.filter_condition(True, percent))
-        print(color)
-
         # unpaved
         r = mapnik.Rule()
         r.filter = mapnik.Filter(self.filter_condition(False, percent))
