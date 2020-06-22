@@ -6,6 +6,7 @@ import mapnik
 import argparse
 import time
 from CurvatureRasterizer.VectorTile import CurvatureVectorTile
+from CurvatureRasterizer.LineStyle import CurvatureLinesStyle
 
 def build_raster_tile():
     parser = argparse.ArgumentParser(description='Build a raster tile from a vector tile.')
@@ -45,77 +46,7 @@ def build_raster_tile():
     m = mapnik.Map(256,256)
     m.srs = merc.params()
     m.background = mapnik.Color('#00000000')
-
-
-    s = mapnik.Style() # style object to hold rules
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('yellow')
-    ls.stroke_width = 0.5
-    r.symbols.append(ls)
-    s.rules.append(r)
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke_width = 1.0
-    ls.stroke = mapnik.Color('yellow')
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[paved] = true")
-    s.rules.append(r)
-
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('orange')
-    ls.stroke_width = 0.5
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[paved] = false and [curvature] >= 2000")
-    s.rules.append(r)
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('orange')
-    ls.stroke_width = 1.0
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[paved] = true and [curvature] >= 2000")
-    s.rules.append(r)
-
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('red')
-    ls.stroke_width = 0.5
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[paved] = false and [curvature] >= 4000")
-    s.rules.append(r)
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('red')
-    ls.stroke_width = 1.0
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[paved] = true and [curvature] >= 4000")
-    s.rules.append(r)
-
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('magenta')
-    ls.stroke_width = 0.5
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[paved] = false and [curvature] >= 8000")
-    s.rules.append(r)
-
-    r = mapnik.Rule()
-    ls = mapnik.LineSymbolizer()
-    ls.stroke = mapnik.Color('red')
-    ls.stroke_width = 1.0
-    r.symbols.append(ls)
-    r.filter = mapnik.Filter("[magenta] = true and [curvature] >= 8000")
-    s.rules.append(r)
-
-    m.append_style('Curvature Lines',s) # Styles are given names only as they are applied to the map
+    m.append_style('Curvature Lines', CurvatureLinesStyle().get_style())
 
     vector_tile = CurvatureVectorTile(args.i, args.z, args.x, args.y)
     ds = mapnik.MemoryDatasource()
