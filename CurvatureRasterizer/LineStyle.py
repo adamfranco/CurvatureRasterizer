@@ -59,7 +59,7 @@ class CurvatureLinesStyle(object):
         # zoom 13 == 19.1
         if zoom >= 13:
           # At high zooms, basemap road rendering makes the line-width less distinct.
-          return 1.5
+          return 2
         # zoom 12 == 38.2
         # zoom 11 == 76.4
         # zoom 10 == 152.8
@@ -67,16 +67,16 @@ class CurvatureLinesStyle(object):
         # Zoom 8 == 611.49
         # Zoom 7 == 1222.9
         if zoom >= 7:
-          return 0.75
+          return 1.7
         # Zoom 6 == 2445.9
         if zoom == 6:
-          return 0.5
+          return 0.65
         # Zoom 5 == 4891.9
         if zoom == 5:
-          return 0.25
+          return 0.2
         # Zoom 4 == 9783.9
         if zoom == 4:
-          return 0.13
+          return 0.1
 
         return 0.1
 
