@@ -18,6 +18,8 @@ def build_raster_tile():
     parser.add_argument('-x', type=int, required=True, help='x-coordinate of the tile.')
     parser.add_argument('-y', type=int, required=True, help='y-coordinate of the tile.')
     parser.add_argument('-u', action='store_true', help='Update tiles in the region. Default behavior is to generate if they do not exist.')
+    parser.add_argument('--pixels', type=int, default=256, help='Pixel dimension of the output image. Default: 256.')
+
     args = parser.parse_args()
 
 
@@ -43,7 +45,7 @@ def build_raster_tile():
     merc = mapnik.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
 
 
-    m = mapnik.Map(256,256)
+    m = mapnik.Map(args.pixels, args.pixels)
     m.srs = merc.params()
     m.background = mapnik.Color('#00000000')
     m.append_style('Curvature Lines', CurvatureLinesStyle(args.z).get_style())
