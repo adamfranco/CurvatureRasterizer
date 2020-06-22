@@ -37,7 +37,7 @@ class CurvatureVectorTile(object):
         layer = tile['gte1000']
         self.extent = layer['extent']
         # print(layer['extent'])
-        for v_feature in layer['features']:
+        for v_feature in sorted(layer['features'], key=lambda x: x['properties']['curvature']):
             feature = mapnik.Feature(context, i)
             feature['curvature'] = v_feature['properties']['curvature']
             feature['paved'] = v_feature['properties']['paved']
