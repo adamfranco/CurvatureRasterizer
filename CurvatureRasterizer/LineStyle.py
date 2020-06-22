@@ -76,9 +76,9 @@ class CurvatureLinesStyle(object):
           return 0.2
         # Zoom 4 == 9783.9
         if zoom == 4:
-          return 0.1
+          return 0.07
 
-        return 0.1
+        return 0.03
 
     def curvature_threshold(self, color_pct):
         color_pct = color_pct/100
