@@ -43,7 +43,7 @@ def build_raster_tile():
     merc = mapnik.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
 
 
-    m = mapnik.Map(256,256)
+    m = mapnik.Map(512,512)
     m.srs = merc.params()
     m.background = mapnik.Color('#00000000')
     m.append_style('Curvature Lines', CurvatureLinesStyle(args.z).get_style())
