@@ -46,7 +46,7 @@ def build_raster_tile():
     m = mapnik.Map(256,256)
     m.srs = merc.params()
     m.background = mapnik.Color('#00000000')
-    m.append_style('Curvature Lines', CurvatureLinesStyle().get_style())
+    m.append_style('Curvature Lines', CurvatureLinesStyle(args.z).get_style())
 
     vector_tile = CurvatureVectorTile(args.i, args.z, args.x, args.y)
     ds = mapnik.MemoryDatasource()
