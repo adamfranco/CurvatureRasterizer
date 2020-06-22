@@ -12,6 +12,7 @@
 
 import os
 import sys
+import resource
 import mapbox_vector_tile
 import mercantile
 import mapnik
@@ -201,3 +202,7 @@ m.zoom_to_box(bbox)
 
 mapnik.render_to_file(m, output_file, args.f)
 print ("%s written" % output_file)
+
+if args.v:
+    sys.stderr.write("{mem:.1f}MB\n".format( mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+    sys.stderr.flush()
