@@ -23,7 +23,7 @@ def build_raster_tile():
     parser.add_argument('-x', type=int, required=True, help='x-coordinate of the tile.')
     parser.add_argument('-y', type=int, required=True, help='y-coordinate of the tile.')
     parser.add_argument('-u', action='store_true', help='Update tiles in the region. Default behavior is to generate if they do not exist.')
-    parser.add_argument('--pixels', type=int, default=256, help='Pixel dimension of the output image. Default: 256.')
+    parser.add_argument('--pixels', type=int, default=512, help='Pixel dimension of the output image, 256, 512, etc. Default: 512.')
 
     result = rasterize_tile(parser.parse_args())
     exit(result)
@@ -35,7 +35,7 @@ def build_region_rasters():
     parser.add_argument('-r', type=str, help='Which region to [re]build.')
     parser.add_argument('-z', type=int, help='Which zoom to build tiles for.')
     parser.add_argument('-u', action='store_true', help='Update tiles in the region. Default behavior is to generate if they do not exist.')
-    parser.add_argument('--pixels', type=int, default=256, help='Pixel dimension of the output image. Default: 256.')
+    parser.add_argument('--pixels', type=int, default=512, help='Pixel dimension of the output image, 256, 512, etc. Default: 512.')
     parser.add_argument('-f', type=str, default='png', help='Output file-type. Examples: png, png256, jpeg, jpeg50, jpeg100')
     parser.add_argument('-i', type=str, default='https://tile.roadcurvature.com/vector/gte1000/{z}/{x}/{y}.mvt', help='Input template path/url for vector tiles. Examples: "http://example.com/{z}/{x}/{y}.mvt", "/var/cache/tiles/vector/{z}/{x}/{y}.mvt"')
     parser.add_argument('-o', type=str, default='/var/www/tilecache/raster/gte1000/{z}/{x}/{y}.png', help='Output template path for raster tiles. Examples: "{z}-{x}-{y}.png", "/var/cache/tiles/raster/{z}/{x}/{y}.png"')
@@ -77,6 +77,23 @@ def build_region_rasters():
             8: [
                 ((0,54),(90,115)),
             ]
+        },
+        'new-england': {
+            4: [
+                ((4,5), (4,5))
+            ],
+            5: [
+                ((9,11), (9,11))
+            ],
+            6: [
+                ((18,22), (19,23))
+            ],
+            7: [
+                ((37,44), (39,47))
+            ],
+            8: [
+                ((74,88), (79,95)),
+            ],
         },
         'vermont': {
             4: [
