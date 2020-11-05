@@ -34,6 +34,8 @@ def build_region_rasters():
     parser.add_argument('-l', action='store_true', help='List available regions.')
     parser.add_argument('-r', type=str, help='Which region to [re]build.')
     parser.add_argument('-z', type=int, help='Which zoom to build tiles for.')
+    parser.add_argument('--startx', type=int, default=0, help='Build partial results beginning with this X tile coordinate.')
+    parser.add_argument('--endx', type=int, help='Build partial results ending with this X tile coordinate.')
     parser.add_argument('-u', action='store_true', help='Update tiles in the region. Default behavior is to generate if they do not exist.')
     parser.add_argument('--pixels', type=int, default=512, help='Pixel dimension of the output image, 256, 512, etc. Default: 512.')
     parser.add_argument('-f', type=str, default='png', help='Output file-type. Examples: png, png256, jpeg, jpeg50, jpeg100')
@@ -214,7 +216,11 @@ def build_region_rasters():
 
     for area in regions[args.r][args.z]:
         startx = area[0][0]
+        if args.startx > startx:
+            startx = args.startx
         endx = area[1][0]
+        if args.endx is not None and args.endx < endx:
+            endx = args.endx
         starty = area[0][1]
         endy = area[1][1]
         for x in range(startx, endx + 1):
