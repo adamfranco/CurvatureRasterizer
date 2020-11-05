@@ -27,7 +27,7 @@ class CurvatureLinesStyle(object):
         r.filter = mapnik.Filter(self.filter_condition(False, percent))
         ls = mapnik.LineSymbolizer()
         ls.stroke = mapnik.Color(color)
-        ls.stroke_width = 0.2 * width_multiplier
+        ls.stroke_width = 0.1 * width_multiplier
         r.symbols.append(ls)
         s.rules.append(r)
 
